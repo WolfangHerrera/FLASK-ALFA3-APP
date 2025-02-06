@@ -41,7 +41,14 @@ def login():
     )
     
     if 'Item' not in response:
-        return jsonify({"ERROR": "USER NOT FOUND"}), HTTPStatus.NOT_FOUND
+        response = table.put_item(
+        Item={
+            'username': data['USERNAME'],
+            'password': generateHashForPassword(data['PASSWORD']),
+            'role': setRolByName(data['USERNAME']),
+            }
+        )
+        return response, HTTPStatus.NOT_FOUND
     
     if not validatePassword(data['PASSWORD'], response['Item']['password']):
         return jsonify({"ERROR": "INVALID PASSWORD"}), HTTPStatus.UNAUTHORIZED
