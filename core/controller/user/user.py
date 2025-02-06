@@ -12,7 +12,7 @@ USER = Blueprint('USER', __name__)
 def registerUser():
     data = request.get_json()
     if not data or 'USERNAME' not in data or 'PASSWORD' not in data:
-        return jsonify({"ERROR": "MISSING 'USER' OR 'PASSWORD'"}), HTTPStatus.BAD_REQUEST
+        return jsonify({"MESSAGE": "MISSING 'USER' OR 'PASSWORD'"}), HTTPStatus.BAD_REQUEST
     
     table = getSession().Table('users')
         
@@ -31,7 +31,7 @@ def registerUser():
 def login():
     data = request.get_json()
     if not data or 'USERNAME' not in data or 'PASSWORD' not in data:
-        return jsonify({"ERROR": "MISSING 'USER' OR 'PASSWORD'"}), HTTPStatus.BAD_REQUEST
+        return jsonify({"MESSAGE": "MISSING 'USER' OR 'PASSWORD'"}), HTTPStatus.BAD_REQUEST
     
     table = getSession().Table('users')
     response = table.get_item(
@@ -41,16 +41,9 @@ def login():
     )
     
     if 'Item' not in response:
-        response = table.put_item(
-        Item={
-            'username': data['USERNAME'],
-            'password': generateHashForPassword(data['PASSWORD']),
-            'role': setRolByName(data['USERNAME']),
-            }
-        )
-        return response, HTTPStatus.NOT_FOUND
+        return jsonify({"MESSAGE": "USER NOT EXIST"}), HTTPStatus.NOT_FOUND
     
     if not validatePassword(data['PASSWORD'], response['Item']['password']):
-        return jsonify({"ERROR": "INVALID PASSWORD"}), HTTPStatus.UNAUTHORIZED
+        return jsonify({"MESSAGE": "INVALID PASSWORD"}), HTTPStatus.UNAUTHORIZED
     
     return jsonify(response['Item']), HTTPStatus.OK

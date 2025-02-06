@@ -65,7 +65,7 @@ def updateItem():
         Key={
             'item_id': data['ITEM_ID']
         },
-        UpdateExpression='SET item_name = :item_name, price = :price, img_url = :img_url',
+        UpdateExpression='SET item_name = :item_name, price = :price, img_url = :img_url, item_description = :item_description',
         ExpressionAttributeValues={
             ':item_name': data['ITEM_NAME'],
             ':item_description': data['ITEM_DESCRIPTION'],
