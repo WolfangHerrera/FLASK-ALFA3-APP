@@ -34,7 +34,9 @@ def createItem():
 def getItems():
     table = getSession().Table('items')
     response = table.scan()
-    
+    items = response.get('Items', [])
+    sorted_items = sorted(items, key=lambda x: (x['item_id'].startswith('E'), x['item_id']))
+    response['Items'] = sorted_items
     return jsonify(response['Items']), HTTPStatus.OK
 
 
