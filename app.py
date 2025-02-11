@@ -4,13 +4,13 @@ from flask_cors import CORS
 from core.controller.item.item import ITEM
 from core.controller.user.user import USER
 
-APP = Flask(__name__)
-APP.register_blueprint(USER)
-APP.register_blueprint(ITEM)
+app = Flask(__name__)
+app.register_blueprint(USER)
+app.register_blueprint(ITEM)
 
-CORS(APP)
+CORS(app)
 
-@APP.route('/')
+@app.route('/')
 def hello_world():
     return 'Hello, World!'
 
