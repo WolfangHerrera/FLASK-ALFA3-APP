@@ -1,12 +1,13 @@
 import boto3
+import os
 from botocore.exceptions import ClientError
 
 
 def getSession():
    return boto3.resource(
        'dynamodb',
-       aws_access_key_id='',
-       aws_secret_access_key='',
+       aws_access_key_id=os.environ.get('ACCESS_KEY', 'NOTHINGTOSEEHERE'),
+       aws_secret_access_key=os.environ.get('ACCESS_SECRET_KEY', 'NOTHINGTOSEEHERE'),
        region_name='us-east-1'
    )
 
