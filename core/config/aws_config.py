@@ -11,19 +11,19 @@ def getSession():
    )
 
 
-def createTable():
+def createTable(tableName: str, keyName: str):
     dynamodb = getSession()
     table = dynamodb.create_table(
-        TableName='items',
+        TableName=tableName,
         KeySchema=[
             {
-                'AttributeName': 'item_id',
+                'AttributeName': keyName,
                 'KeyType': 'HASH'
             }
         ],
         AttributeDefinitions=[
             {
-                'AttributeName': 'item_id',
+                'AttributeName': keyName,
                 'AttributeType': 'S'
             }
         ],

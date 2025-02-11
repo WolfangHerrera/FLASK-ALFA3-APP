@@ -34,6 +34,7 @@ def login():
         return jsonify({"MESSAGE": "MISSING 'USER' OR 'PASSWORD'"}), HTTPStatus.BAD_REQUEST
     
     table = getSession().Table('users')
+    
     response = table.get_item(
         Key={
             'username': data['USERNAME']
