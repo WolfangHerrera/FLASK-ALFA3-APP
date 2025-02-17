@@ -3,7 +3,7 @@ import uuid
 from http import HTTPStatus
 from flask import request, jsonify
 
-from core.config.aws_config import createTable, getSession
+from core.config.aws_config import getSession
 from core.utils.user.user import generateHashForPassword, setRolByName, validatePassword
 
 
