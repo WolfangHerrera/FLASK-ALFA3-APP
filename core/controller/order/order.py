@@ -36,9 +36,19 @@ def createOrder():
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
         whatsapp_response = sendWhatsAppNotification(phone_customer, order_id)
         if whatsapp_response.get('messages'):
-            return jsonify({"order_id": order_id}), HTTPStatus.OK
+            return jsonify({"ORDER_ID": order_id}), HTTPStatus.OK
     else:
         return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+@ORDER.route("/getOrder/<order_id>", methods=['GET'])
+def getOrder(order_id):
+    table = getSession().Table('orders')
+    response = table.get_item(Key={'order_id': order_id})
+    if 'Item' in response:
+        return jsonify(response['Item']), HTTPStatus.OK
+    else:
+        return jsonify({"ERROR": "ORDER NOT FOUND"}), HTTPStatus.NOT_FOUND
 
 
 def sendWhatsAppNotification(to, message):
