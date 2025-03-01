@@ -64,7 +64,7 @@ def sendWhatsAppNotification(to, message):
         "template": {
             "name": "confirmed",
             "language": {
-                "code": "es_CO"
+                "code": "en_US"
             },
             "components": [
                 {
