@@ -1,6 +1,6 @@
 import os
 from flask import Blueprint
-import uuid
+import mercadopago
 from http import HTTPStatus
 from flask import request, jsonify
 
@@ -18,13 +18,13 @@ def createOrder():
     data = request.get_json()
     if not data or 'PRODUCTS_CART' not in data or 'CUSTOMER_DETAILS' not in data:
         return jsonify({"ERROR": "MISSING 'PRODUCTS_CART' OR 'CUSTOMER_DETAILS'"}), HTTPStatus.BAD_REQUEST
+    
     phone_customer = data['CUSTOMER_DETAILS']['phoneNumberCustomer']
-
     colombia_tz = pytz.timezone('America/Bogota')
     now = datetime.now(colombia_tz)
     date = now.strftime('%Y%m%d-%H%M')
     order_id = 'A3-' + date + '-' + phone_customer[-4:]
-
+    url_payment = generateOrderMP(data['PRODUCTS_CART'])
     table = getSession().Table('orders')
     response = table.put_item(Item={
         'order_id': order_id,
@@ -36,7 +36,7 @@ def createOrder():
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
         whatsapp_response = sendWhatsAppNotification(phone_customer, order_id)
         if whatsapp_response.get('messages'):
-            return jsonify({"ORDER_ID": order_id}), HTTPStatus.OK
+            return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
     else:
         return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -92,3 +92,27 @@ def sendWhatsAppNotification(to, message):
     }
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
+
+
+def generateOrderMP(productsCart):
+    sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
+    items = []
+    for product in productsCart:
+        items.append({
+            "title": product["item_name"],
+            "quantity": int(product["count"]),
+            "unit_price": float(product["price"])
+        })
+
+    print(items)
+    preference_data = {
+        "items": items,
+        "back_urls": {
+            "success": "http://alfa3electricos.com/order/success",
+            "failure": "http://alfa3electricos.com/order/failure",
+            "pending": "http://alfa3electricos.com/order/pending"
+        },
+        "auto_return": "approved"
+    }
+    preference_response = sdk.preference().create(preference_data)
+    return preference_response['response']['init_point']
