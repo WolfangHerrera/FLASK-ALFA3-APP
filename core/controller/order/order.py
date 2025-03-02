@@ -8,6 +8,10 @@ from core.config.aws_config import getSession
 from datetime import datetime
 import pytz
 import requests
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 ORDER = Blueprint('ORDER', __name__)
@@ -53,7 +57,7 @@ def WebhookMercadoPago():
         topic = data['topic']
 
         if topic == 'payment':
-            print(f"Received payment notification for payment_id: {payment_id}")
+            logger.info(f"Received payment notification for payment_id: {payment_id}")
             return jsonify({"STATUS": "SUCCESS"}), HTTPStatus.OK
         
         else:
