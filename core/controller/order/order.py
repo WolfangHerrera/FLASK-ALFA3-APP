@@ -43,7 +43,7 @@ def createOrder():
 
 
 @ORDER.route("/webhook/MercadoPago", methods=['POST'])
-def createOrder():
+def WebhookMercadoPago():
     try:
         data = request.get_json()
         if not data:
