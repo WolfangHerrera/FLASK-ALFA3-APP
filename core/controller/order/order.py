@@ -50,6 +50,7 @@ def createOrder():
 def WebhookMercadoPago():
     try:
         data = request.get_json()
+        logger.info(f"Webhook received with data: {data}")
         if not data or 'id' not in data or 'topic' not in data:
             return jsonify({"ERROR": "MISSING 'id' OR 'topic'"}), HTTPStatus.BAD_REQUEST
         
