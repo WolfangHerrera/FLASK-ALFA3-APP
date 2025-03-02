@@ -11,7 +11,7 @@ app.register_blueprint(USER)
 app.register_blueprint(ITEM)
 app.register_blueprint(ORDER)
 
-CORS(app, resources={r"/*": {"origins": "https://alfa3electricos.com"}})
+CORS(app)
 
 @app.route('/')
 def hello_world():
