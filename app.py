@@ -11,7 +11,14 @@ app.register_blueprint(USER)
 app.register_blueprint(ITEM)
 app.register_blueprint(ORDER)
 
-CORS(app)
+CORS(app, origins=["https://www.alfa3electricos.com"])
+
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', 'https://www.alfa3electricos.com')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    return response
 
 @app.route('/')
 def hello_world():
