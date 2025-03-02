@@ -45,15 +45,27 @@ def createOrder():
 @ORDER.route("/webhook/MercadoPago", methods=['POST'])
 def WebhookMercadoPago():
     try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"ERROR": "MISSING DATA"}), HTTPStatus.BAD_REQUEST
-        
-        sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
-        payment = sdk.payment().get(data['data']['id'])
-        order_id = payment['response']['external_reference']
+        data = request.json
+        if not data or 'id' not in data:
+            return jsonify({"ERROR": "MISSING 'id'"}), HTTPStatus.BAD_REQUEST
 
-        return jsonify({"STATUS": data}), HTTPStatus.OK
+        payment_id = data['id']
+        sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
+        payment_info = sdk.payment().get(payment_id)
+
+        if payment_info['status'] == 200:
+            payment_status = payment_info['response']['status']
+            order_id = payment_info['response']['external_reference']
+            table = getSession().Table('orders')
+            table.update_item(
+            Key={'order_id': order_id},
+            UpdateExpression="set payment_status=:s",
+            ExpressionAttributeValues={':s': payment_status}
+            )
+        else:
+            return jsonify({"ERROR": "ERROR FETCHING PAYMENT INFO"}), HTTPStatus.INTERNAL_SERVER_ERROR
+
+        return jsonify({"STATUS": 'OK'}), HTTPStatus.OK
 
     except Exception as e:
         print(f"Error al procesar el webhook de MercadoPago: {str(e)}")
@@ -127,9 +139,9 @@ def generateOrderMP(productsCart):
     preference_data = {
         "items": items,
         "back_urls": {
-            "success": "https://alfa3electricos.com/empty-state/success",
-            "failure": "https://alfa3electricos.com/empty-state/failure",
-            "pending": "https://alfa3electricos.com/empty-state/pending"
+            "success": "https://alfa3electricos.com",
+            "failure": "https://alfa3electricos.com",
+            "pending": "https://alfa3electricos.com"
         },
         "auto_return": "approved",
         "notification_url": "https://alfa3-flask-fd769661555f.herokuapp.com/webhook/MercadoPago",

@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 
+
 from core.controller.item.item import ITEM
 from core.controller.order.order import ORDER
 from core.controller.user.user import USER
@@ -10,7 +11,7 @@ app.register_blueprint(USER)
 app.register_blueprint(ITEM)
 app.register_blueprint(ORDER)
 
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "https://alfa3electricos.com"}})
 
 @app.route('/')
 def hello_world():
