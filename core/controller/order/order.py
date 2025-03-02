@@ -45,28 +45,20 @@ def createOrder():
 @ORDER.route("/webhook/MercadoPago", methods=['POST'])
 def WebhookMercadoPago():
     try:
-        data = request.json
-        if not data or 'id' not in data:
-            return jsonify({"ERROR": "MISSING 'id'"}), HTTPStatus.BAD_REQUEST
-
+        data = request.get_json()
+        if not data or 'id' not in data or 'topic' not in data:
+            return jsonify({"ERROR": "MISSING 'id' OR 'topic'"}), HTTPStatus.BAD_REQUEST
+        
         payment_id = data['id']
-        sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
-        payment_info = sdk.payment().get(payment_id)
+        topic = data['topic']
 
-        if payment_info['status'] == 200:
-            payment_status = payment_info['response']['status']
-            order_id = payment_info['response']['external_reference']
-            table = getSession().Table('orders')
-            table.update_item(
-            Key={'order_id': order_id},
-            UpdateExpression="set payment_status=:s",
-            ExpressionAttributeValues={':s': payment_status}
-            )
+        if topic == 'payment':
+            print(f"Received payment notification for payment_id: {payment_id}")
+            return jsonify({"STATUS": "SUCCESS"}), HTTPStatus.OK
+        
         else:
-            return jsonify({"ERROR": "ERROR FETCHING PAYMENT INFO"}), HTTPStatus.INTERNAL_SERVER_ERROR
-
-        return jsonify({"STATUS": 'OK'}), HTTPStatus.OK
-
+            return jsonify({"ERROR": "UNSUPPORTED TOPIC"}), HTTPStatus.BAD_REQUEST
+        
     except Exception as e:
         print(f"Error al procesar el webhook de MercadoPago: {str(e)}")
         return jsonify({"ERROR": "INTERNAL SERVER ERROR"}), HTTPStatus.INTERNAL_SERVER_ERROR
