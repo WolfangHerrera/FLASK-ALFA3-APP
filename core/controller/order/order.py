@@ -127,9 +127,9 @@ def generateOrderMP(productsCart):
     preference_data = {
         "items": items,
         "back_urls": {
-            "success": "http://alfa3electricos.com/empty-state/success",
-            "failure": "http://alfa3electricos.com/empty-state/failure",
-            "pending": "http://alfa3electricos.com/empty-state/pending"
+            "success": "https://alfa3electricos.com/empty-state/success",
+            "failure": "https://alfa3electricos.com/empty-state/failure",
+            "pending": "https://alfa3electricos.com/empty-state/pending"
         },
         "auto_return": "approved",
         "notification_url": "https://alfa3-flask-fd769661555f.herokuapp.com/webhook/MercadoPago",
