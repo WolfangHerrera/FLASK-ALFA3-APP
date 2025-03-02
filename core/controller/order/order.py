@@ -145,7 +145,8 @@ def generateOrderMP(productsCart):
             "failure": "http://alfa3electricos.com/order/failure",
             "pending": "http://alfa3electricos.com/order/pending"
         },
-        "auto_return": "approved"
+        "auto_return": "approved",
+        "notification_url": "https://alfa3-flask-fd769661555f.herokuapp.com/webhook/MercadoPago",
     }
     preference_response = sdk.preference().create(preference_data)
     return preference_response['response']['init_point']
