@@ -49,20 +49,11 @@ def createOrder():
 @ORDER.route("/webhook/MercadoPago", methods=['POST'])
 def WebhookMercadoPago():
     try:
-        data = request.get_json()
-        logger.info(f"Webhook received with data: {data}")
-        if not data or 'id' not in data or 'topic' not in data:
-            return jsonify({"ERROR": "MISSING 'id' OR 'topic'"}), HTTPStatus.BAD_REQUEST
-        
-        payment_id = data['id']
-        topic = data['topic']
+        logger.info(f"Received MercadoPago webhook with id: {request.args.get('id')} and topic: {request.args.get('topic')}")
+        logger.info(f"Webhook received with data: {request}")
+        sendWhatsAppNotification('3134508305', request)
+        return jsonify({"STATUS": "SUCCESS"}), HTTPStatus.OK
 
-        if topic == 'payment':
-            logger.info(f"Received payment notification for payment_id: {payment_id}")
-            return jsonify({"STATUS": "SUCCESS"}), HTTPStatus.OK
-        
-        else:
-            return jsonify({"ERROR": "UNSUPPORTED TOPIC"}), HTTPStatus.BAD_REQUEST
         
     except Exception as e:
         print(f"Error al procesar el webhook de MercadoPago: {str(e)}")
