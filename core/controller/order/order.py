@@ -50,24 +50,10 @@ def WebhookMercadoPago():
             return jsonify({"ERROR": "MISSING DATA"}), HTTPStatus.BAD_REQUEST
         
         sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
-        if 'type' in data:
-            event_type = data['type']
-            if event_type == 'payment':
-                payment_data = data['data']
-                payment_id = payment_data['id']
-                
-                payment_info = sdk.payment.find_by_id(payment_id)
-                
-                if payment_info.get('status') == 'approved':
-                    print(f"Pago aprobado: {payment_info['id']}")
-                elif payment_info.get('status') == 'rejected':
-                    print(f"Pago rechazado: {payment_info['id']}")
-                elif payment_info.get('status') == 'pending':
-                    print(f"Pago pendiente: {payment_info['id']}")
-                else:
-                    print(f"Pago en estado desconocido: {payment_info['id']}")
+        payment = sdk.payment().get(data['data']['id'])
+        order_id = payment['response']['external_reference']
 
-        return jsonify({"STATUS": "OK"}), HTTPStatus.OK
+        return jsonify({"STATUS": data}), HTTPStatus.OK
 
     except Exception as e:
         print(f"Error al procesar el webhook de MercadoPago: {str(e)}")
@@ -141,9 +127,9 @@ def generateOrderMP(productsCart):
     preference_data = {
         "items": items,
         "back_urls": {
-            "success": "http://alfa3electricos.com/order/success",
-            "failure": "http://alfa3electricos.com/order/failure",
-            "pending": "http://alfa3electricos.com/order/pending"
+            "success": "http://alfa3electricos.com/empty-state/success",
+            "failure": "http://alfa3electricos.com/empty-state/failure",
+            "pending": "http://alfa3electricos.com/empty-state/pending"
         },
         "auto_return": "approved",
         "notification_url": "https://alfa3-flask-fd769661555f.herokuapp.com/webhook/MercadoPago",
