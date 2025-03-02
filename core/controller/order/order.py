@@ -41,6 +41,39 @@ def createOrder():
         return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+
+@ORDER.route("/webhook/MercadoPago", methods=['POST'])
+def createOrder():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"ERROR": "MISSING DATA"}), HTTPStatus.BAD_REQUEST
+        
+        sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
+        if 'type' in data:
+            event_type = data['type']
+            if event_type == 'payment':
+                payment_data = data['data']
+                payment_id = payment_data['id']
+                
+                payment_info = sdk.payment.find_by_id(payment_id)
+                
+                if payment_info.get('status') == 'approved':
+                    print(f"Pago aprobado: {payment_info['id']}")
+                elif payment_info.get('status') == 'rejected':
+                    print(f"Pago rechazado: {payment_info['id']}")
+                elif payment_info.get('status') == 'pending':
+                    print(f"Pago pendiente: {payment_info['id']}")
+                else:
+                    print(f"Pago en estado desconocido: {payment_info['id']}")
+
+        return jsonify({"STATUS": "OK"}), HTTPStatus.OK
+
+    except Exception as e:
+        print(f"Error al procesar el webhook de MercadoPago: {str(e)}")
+        return jsonify({"ERROR": "INTERNAL SERVER ERROR"}), HTTPStatus.INTERNAL_SERVER_ERROR
+
+
 @ORDER.route("/getOrder/<order_id>", methods=['GET'])
 def getOrder(order_id):
     table = getSession().Table('orders')
