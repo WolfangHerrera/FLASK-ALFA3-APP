@@ -28,7 +28,7 @@ def createOrder():
     now = datetime.now(colombia_tz)
     date = now.strftime('%Y%m%d-%H%M')
     order_id = 'A3-' + date + '-' + phone_customer[-4:]
-    url_payment = ''
+    url_payment = generateOrderMP(data['PRODUCTS_CART'])
     table = getSession().Table('orders')
     response = table.put_item(Item={
         'order_id': order_id,
@@ -41,6 +41,8 @@ def createOrder():
         whatsapp_response = sendWhatsAppNotification(phone_customer, order_id)
         if whatsapp_response.get('messages'):
             return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
+        else:
+            return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
     else:
         return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
