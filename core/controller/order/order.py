@@ -28,7 +28,7 @@ def createOrder():
     now = datetime.now(colombia_tz)
     date = now.strftime('%Y%m%d-%H%M')
     order_id = 'A3-' + date + '-' + phone_customer[-4:]
-    url_payment = generateOrderMP(data['PRODUCTS_CART'])
+    url_payment = ''
     table = getSession().Table('orders')
     response = table.put_item(Item={
         'order_id': order_id,
