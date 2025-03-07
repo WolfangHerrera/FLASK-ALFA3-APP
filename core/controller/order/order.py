@@ -51,6 +51,8 @@ def createOrder():
 @ORDER.route("/webhook/MercadoPago", methods=['POST'])
 def WebhookMercadoPago():
     try:
+        webhook_url = request.url
+        logger.info(f"Received MercadoPago webhook at URL: {webhook_url}")
         logger.info(f"Received MercadoPago webhook with id: {request.args.get('id')} and topic: {request.args.get('topic')}")
         logger.info(f"Webhook received with data: {request}")
         sendWhatsAppNotification('3134508305', request)
