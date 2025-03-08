@@ -34,13 +34,14 @@ def createOrder():
         'order_id': order_id,
         'products_cart': data['PRODUCTS_CART'],
         'customer_details': data['CUSTOMER_DETAILS'],
-        'status': 'CONFIRMED',
+        'status': 'IN PROGRESS',
         'total_price': data['TOTAL_PRICE']
     })
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+        return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
         whatsapp_response = sendWhatsAppNotification(phone_customer, order_id)
         if whatsapp_response.get('messages'):
-            return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
+            pass
         else:
             return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
     else:
@@ -53,34 +54,13 @@ def WebhookMercadoPago():
     try:
         if request.is_json:
             data = request.get_json()
-            
-            logger.info(f"Evento recibido: {data['action']}")
-            logger.info(f"ID de pago: {data['data']['id']}")
-            logger.info(f"Fecha de creación: {data['date_created']}")
-            logger.info(f"Usuario ID: {data['user_id']}")
-            logger.info(f"EXTERNAL ID: {data['data'].get('external_reference', None)}")
-            
-            action = data['action']
-            if action == "payment.updated":
-                payment_id = data['data']['id']
+            logger.info(f"*** *** *** Evento recibido: {data}")
 
-                sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
-                payment_info = sdk.payment().get(payment_id)
-                
-                payment_status = payment_info['response']['status']
-                
-                if payment_status == "approved":
-                    logger.info(f"Pago aprobado para el ID de pago {payment_id}")
-                elif payment_status == "rejected":
-                    logger.info(f"Pago rechazado para el ID de pago {payment_id}")
-                else:
-                    logger.info(f"Pago en otro estado: {payment_status}")
-        
         return jsonify({"STATUS": "SUCCESS"}), HTTPStatus.OK
 
         
     except Exception as e:
-        logger.info(f"Error al procesar el webhook de MercadoPago: {str(e)}")
+        logger.info(f"*** *** *** Error al procesar el webhook de MercadoPago: {str(e)}")
         return jsonify({"ERROR": "INTERNAL SERVER ERROR"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
