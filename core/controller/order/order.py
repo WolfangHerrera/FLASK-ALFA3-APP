@@ -126,7 +126,7 @@ def generateOrderMP(productsCart, order_id):
         "items": items,
         "back_urls": {
             "success": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id),
-            "failure": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id),
+            "failure": "https://alfa3electricos.com",
             "pending": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id)
         },
         "auto_return": "approved",
