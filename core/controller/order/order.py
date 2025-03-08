@@ -40,13 +40,10 @@ def createOrder():
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
         numbers_to_send = os.environ.get('NUMBERS_PHONE', ['NOTHINGTOSEEHERE', 'NOTHINGTOSEEHERE'])
         for number in numbers_to_send:
-            whatsapp_response = sendWhatsAppNotification(number, order_id, 'in_progress')
+            sendWhatsAppNotification(number, order_id, 'in_progress')
 
-        if whatsapp_response.get('messages'):
-            return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
-        else:
-            return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
-
+        return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
+    
     else:
         return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -82,10 +79,11 @@ def WebhookMercadoPago():
                 order_info = table.get_item(Key={'order_id': external_reference})
                 if 'Item' in order_info:
                     customer_details = order_info['Item'].get('customer_details', {})
-                    sendWhatsAppNotification(customer_details['phoneNumberCustomer'], external_reference, 'confirmed')
-                    return jsonify({"STATUS": "PAYMENT STATUS UPDATED"}), HTTPStatus.OK
-                else:
-                    return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
+                    whatsapp_response = sendWhatsAppNotification(customer_details['phoneNumberCustomer'], external_reference, 'confirmed')
+                    if whatsapp_response.get('messages'):
+                        return jsonify({"STATUS": "PAYMENT STATUS UPDATED"}), HTTPStatus.OK
+                    else:
+                        return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
             if response['ResponseMetadata']['HTTPStatusCode'] == 200:
                 return jsonify({"STATUS": "PAYMENT STATUS UPDATED"}), HTTPStatus.OK
