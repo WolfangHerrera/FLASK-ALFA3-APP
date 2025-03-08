@@ -141,38 +141,62 @@ def sendWhatsAppNotification(to, message, template_name):
         'Content-Type': 'application/json',
         'Authorization': 'Bearer {token}'.format(token=os.environ.get('TOKEN_PHONE', 'NOTHINGTOSEEHERE'))
     }
-    payload = {
-        "messaging_product": "whatsapp",
-        "to": "57{to}".format(to=to),
-        "type": "template",
-        "template": {
-            "name": template_name,
-            "language": {
-                "code": "en_US"
-            },
-            "components": [
-                {
-                    "type": "body",
-                    "parameters": [
-                        {
-                            "type": "text",
-                            "text": message
-                        }
-                    ]
+    if template_name != 'confirmed':
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": "57{to}".format(to=to),
+            "type": "template",
+            "template": {
+                "name": template_name,
+                "language": {
+                    "code": "en_US"
                 },
-                {
-                    "type": "button",
-                    "sub_type": "url",
-                    "index": 0,
-                    "parameters": [
-                        {
-                            "type": "text",
-                            "text": "order/{message}".format(message=message),
-                        }
-                    ]
-                }
-            ]
+                "components": [
+                    {
+                        "type": "body",
+                        "parameters": [
+                            {
+                                "type": "text",
+                                "text": message
+                            }
+                        ]
+                    }
+                ]
+            }
         }
-    }
+    else:
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": "57{to}".format(to=to),
+            "type": "template",
+            "template": {
+                "name": template_name,
+                "language": {
+                    "code": "en_US"
+                },
+                "components": [
+                    {
+                        "type": "body",
+                        "parameters": [
+                            {
+                                "type": "text",
+                                "text": message
+                            }
+                        ]
+                    },
+                    {
+                        "type": "button",
+                        "sub_type": "url",
+                        "index": 0,
+                        "parameters": [
+                            {
+                                "type": "text",
+                                "text": "order/{message}".format(message=message),
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
