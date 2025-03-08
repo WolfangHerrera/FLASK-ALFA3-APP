@@ -51,15 +51,35 @@ def createOrder():
 @ORDER.route("/webhook/MercadoPago", methods=['POST'])
 def WebhookMercadoPago():
     try:
-        webhook_url = request.url
-        logger.info(f"Received MercadoPago webhook at URL: {webhook_url}")
-        logger.info(f"Webhook received with data: {request}")
-        sendWhatsAppNotification('3134508305', "Se ha realizado un pago exitoso en MercadoPago")
+        if request.is_json:
+            data = request.get_json()
+            
+            logger.info(f"Evento recibido: {data['action']}")
+            logger.info(f"ID de pago: {data['data']['id']}")
+            logger.info(f"Fecha de creación: {data['date_created']}")
+            logger.info(f"Usuario ID: {data['user_id']}")
+            
+            action = data['action']
+            if action == "payment.updated":
+                payment_id = data['data']['id']
+
+                sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
+                payment_info = sdk.payment().get(payment_id)
+                
+                payment_status = payment_info['response']['status']
+                
+                if payment_status == "approved":
+                    logger.info(f"Pago aprobado para el ID de pago {payment_id}")
+                elif payment_status == "rejected":
+                    logger.info(f"Pago rechazado para el ID de pago {payment_id}")
+                else:
+                    logger.info(f"Pago en otro estado: {payment_status}")
+        
         return jsonify({"STATUS": "SUCCESS"}), HTTPStatus.OK
 
         
     except Exception as e:
-        print(f"Error al procesar el webhook de MercadoPago: {str(e)}")
+        logger.info(f"Error al procesar el webhook de MercadoPago: {str(e)}")
         return jsonify({"ERROR": "INTERNAL SERVER ERROR"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
@@ -71,6 +91,30 @@ def getOrder(order_id):
         return jsonify(response['Item']), HTTPStatus.OK
     else:
         return jsonify({"ERROR": "ORDER NOT FOUND"}), HTTPStatus.NOT_FOUND
+
+
+def generateOrderMP(productsCart):
+    sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
+    items = []
+    for product in productsCart:
+        items.append({
+            "title": product["item_name"],
+            "quantity": int(product["count"]),
+            "unit_price": float(product["price"])
+        })
+
+    preference_data = {
+        "items": items,
+        "back_urls": {
+            "success": "https://alfa3electricos.com",
+            "failure": "https://alfa3electricos.com",
+            "pending": "https://alfa3electricos.com"
+        },
+        "auto_return": "approved",
+        "notification_url": "https://alfa3-flask-fd769661555f.herokuapp.com/webhook/MercadoPago",
+    }
+    preference_response = sdk.preference().create(preference_data)
+    return preference_response['response']['init_point']
 
 
 def sendWhatsAppNotification(to, message):
@@ -114,28 +158,3 @@ def sendWhatsAppNotification(to, message):
     }
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
-
-
-def generateOrderMP(productsCart):
-    sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
-    items = []
-    for product in productsCart:
-        items.append({
-            "title": product["item_name"],
-            "quantity": int(product["count"]),
-            "unit_price": float(product["price"])
-        })
-
-    print(items)
-    preference_data = {
-        "items": items,
-        "back_urls": {
-            "success": "https://alfa3electricos.com",
-            "failure": "https://alfa3electricos.com",
-            "pending": "https://alfa3electricos.com"
-        },
-        "auto_return": "approved",
-        "notification_url": "https://alfa3-flask-fd769661555f.herokuapp.com/webhook/MercadoPago",
-    }
-    preference_response = sdk.preference().create(preference_data)
-    return preference_response['response']['init_point']
