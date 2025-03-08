@@ -38,7 +38,7 @@ def createOrder():
         'total_price': data['TOTAL_PRICE']
     })
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
-        numbers_to_send = os.environ.get('NUMBER_PHONE', 'NOTHINGTOSEEHERE')
+        numbers_to_send = os.environ.get('NUMBERS_PHONE', 'NOTHINGTOSEEHERE')
         logger.info(f"Enviando notificación a los números: {numbers_to_send}")
         for number in numbers_to_send.split(','):
             logger.info(f"Enviando notificación a: {number}")
