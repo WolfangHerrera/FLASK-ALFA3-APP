@@ -86,6 +86,7 @@ def WebhookMercadoPago():
 
 @ORDER.route("/getOrder/<order_id>", methods=['GET'])
 def getOrder(order_id):
+    logger.info(f"Buscando orden con ID: {order_id}")
     table = getSession().Table('orders')
     response = table.get_item(Key={'order_id': order_id})
     if 'Item' in response:
