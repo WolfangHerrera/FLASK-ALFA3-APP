@@ -38,10 +38,9 @@ def createOrder():
         'total_price': data['TOTAL_PRICE']
     })
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
-        return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
         whatsapp_response = sendWhatsAppNotification(phone_customer, order_id)
         if whatsapp_response.get('messages'):
-            pass
+            return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
         else:
             return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
     else:
