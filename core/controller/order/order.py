@@ -38,11 +38,8 @@ def createOrder():
         'total_price': data['TOTAL_PRICE']
     })
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
-        whatsapp_response = sendWhatsAppNotification(phone_customer, order_id)
-        if whatsapp_response.get('messages'):
-            return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
-        else:
-            return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
+        return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
+
     else:
         return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -72,10 +69,22 @@ def WebhookMercadoPago():
             table = getSession().Table('orders')
             response = table.update_item(
                 Key={'order_id': external_reference},
-                UpdateExpression="set STATUS=:s",
+                UpdateExpression="set #s = :s",
+                ExpressionAttributeNames={'#s': 'status'},
                 ExpressionAttributeValues={':s': 'CONFIRMED' if payment_status == 'approved' else 'REJECTED'},
                 ReturnValues="UPDATED_NEW"
             )
+
+            if payment_status == 'approved':
+                order_info = table.get_item(Key={'order_id': external_reference})
+                if 'Item' in order_info:
+                    customer_details = order_info['Item'].get('customer_details', {})
+                    logger.info(f"Customer details: {customer_details}")
+                    whatsapp_response = sendWhatsAppNotification(customer_details['phoneNumberCustomer'], external_reference)
+                    if whatsapp_response.get('messages'):
+                        return jsonify({"STATUS": "PAYMENT STATUS UPDATED"}), HTTPStatus.OK
+                    else:
+                        return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
             if response['ResponseMetadata']['HTTPStatusCode'] == 200:
                 logger.info("Payment status updated successfully")
