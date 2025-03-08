@@ -39,8 +39,11 @@ def createOrder():
     })
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
         numbers_to_send = os.environ.get('NUMBER_PHONE', 'NOTHINGTOSEEHERE')
+        logger.info(f"Enviando notificación a los números: {numbers_to_send}")
         for number in numbers_to_send.split(','):
-            sendWhatsAppNotification(number, order_id, 'in_progress')
+            logger.info(f"Enviando notificación a: {number}")
+            whatsapp_response = sendWhatsAppNotification(number, order_id, 'in_progress')
+            logger.info(f"Respuesta de WhatsApp: {whatsapp_response}")
 
         return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
     
