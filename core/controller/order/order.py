@@ -28,7 +28,7 @@ def createOrder():
     now = datetime.now(colombia_tz)
     date = now.strftime('%Y%m%d-%H%M')
     order_id = 'A3-' + date + '-' + phone_customer[-4:]
-    url_payment = generateOrderMP(data['PRODUCTS_CART'])
+    url_payment = generateOrderMP(data['PRODUCTS_CART'], order_id)
     table = getSession().Table('orders')
     response = table.put_item(Item={
         'order_id': order_id,
@@ -58,6 +58,7 @@ def WebhookMercadoPago():
             logger.info(f"ID de pago: {data['data']['id']}")
             logger.info(f"Fecha de creación: {data['date_created']}")
             logger.info(f"Usuario ID: {data['user_id']}")
+            logger.info(f"EXTERNAL ID: {data['data']['external_reference']}")
             
             action = data['action']
             if action == "payment.updated":
@@ -93,7 +94,7 @@ def getOrder(order_id):
         return jsonify({"ERROR": "ORDER NOT FOUND"}), HTTPStatus.NOT_FOUND
 
 
-def generateOrderMP(productsCart):
+def generateOrderMP(productsCart, order_id):
     sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
     items = []
     for product in productsCart:
@@ -112,6 +113,7 @@ def generateOrderMP(productsCart):
         },
         "auto_return": "approved",
         "notification_url": "https://alfa3-flask-fd769661555f.herokuapp.com/webhook/MercadoPago",
+        "external_reference": order_id
     }
     preference_response = sdk.preference().create(preference_data)
     return preference_response['response']['init_point']
