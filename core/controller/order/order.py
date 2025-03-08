@@ -141,7 +141,7 @@ def sendWhatsAppNotification(to, message, template_name):
         'Content-Type': 'application/json',
         'Authorization': 'Bearer {token}'.format(token=os.environ.get('TOKEN_PHONE', 'NOTHINGTOSEEHERE'))
     }
-    if template_name != 'confirmed':
+    if template_name == 'in_progress':
         payload = {
             "messaging_product": "whatsapp",
             "to": "57{to}".format(to=to),
