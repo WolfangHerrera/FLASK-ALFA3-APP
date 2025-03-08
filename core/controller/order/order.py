@@ -52,13 +52,66 @@ def createOrder():
 @ORDER.route("/webhook/MercadoPago", methods=['POST'])
 def WebhookMercadoPago():
     try:
-        if request.is_json:
-            data = request.get_json()
-            logger.info(f"*** *** *** Evento recibido: {data}")
-
-        return jsonify({"STATUS": "SUCCESS"}), HTTPStatus.OK
-
+        data = request.get_json()
+        logger.info(f"DATA***: {data}")
         
+        if request.is_json:
+            topic = data.get('topic')
+        if topic is None:
+            return jsonify({"error": "Faltando el campo 'topic'"}), 400
+
+        # Procesar según el tipo de evento
+        if topic == 'payment':
+            # Lógica para el evento 'payment'
+            action = data.get('action')
+            payment_id = data.get('data', {}).get('id')
+            
+            if action == 'payment.created':
+                logger.info(f"Pago creado con ID: {payment_id}")
+                # Aquí puedes consultar la API de MercadoPago para obtener el estado del pago
+                sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
+                payment_info = sdk.payment().get(payment_id)
+
+                # Verificar el estado del pago
+                payment_status = payment_info['response']['status']
+                if payment_status == 'approved':
+                    logger.info(f"Pago aprobado: {payment_id}")
+                    # Aquí podrías actualizar el estado de la orden en tu base de datos
+                else:
+                    logger.info(f"Pago no aprobado: {payment_id}, estado: {payment_status}")
+            
+            elif action == 'payment.updated':
+                logger.info(f"Pago actualizado con ID: {payment_id}")
+                sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
+                payment_info = sdk.payment().get(payment_id)
+                payment_status = payment_info['response']['status']
+                if payment_status == 'approved':
+                    logger.info(f"Pago aprobado: {payment_id}")
+                    # Aquí puedes actualizar el estado de la orden en tu base de datos
+                else:
+                    logger.info(f"Pago no aprobado: {payment_id}, estado: {payment_status}")
+            
+        elif topic == 'merchant_order':
+            # Lógica para el evento 'merchant_order'
+            resource = data.get('resource')
+            if resource:
+                logger.info(f"Orden de comerciante actualizada: {resource}")
+                # Aquí puedes hacer una consulta a la API de MercadoPago para obtener los detalles de la orden
+                sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
+                order_info = sdk.merchant_order().get(resource)
+                order_status = order_info['response']['status']
+                if order_status == 'approved':
+                    logger.info(f"Orden aprobada: {resource}")
+                    # Aquí podrías actualizar la orden en tu sistema
+                else:
+                    logger.info(f"Orden no aprobada: {resource}, estado: {order_status}")
+
+        else:
+            logger.info(f"Evento no reconocido con 'topic': {topic}")
+            return jsonify({"error": "Evento no reconocido"}), 400
+
+        return jsonify({"status": "success"}), 200
+
     except Exception as e:
         logger.info(f"*** *** *** Error al procesar el webhook de MercadoPago: {str(e)}")
         return jsonify({"ERROR": "INTERNAL SERVER ERROR"}), HTTPStatus.INTERNAL_SERVER_ERROR
