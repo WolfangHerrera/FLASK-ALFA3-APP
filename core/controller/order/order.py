@@ -58,7 +58,7 @@ def WebhookMercadoPago():
             logger.info(f"ID de pago: {data['data']['id']}")
             logger.info(f"Fecha de creación: {data['date_created']}")
             logger.info(f"Usuario ID: {data['user_id']}")
-            logger.info(f"EXTERNAL ID: {data['data']['external_reference']}")
+            logger.info(f"EXTERNAL ID: {data['data'].get('external_reference', None)}")
             
             action = data['action']
             if action == "payment.updated":
@@ -107,9 +107,9 @@ def generateOrderMP(productsCart, order_id):
     preference_data = {
         "items": items,
         "back_urls": {
-            "success": "https://alfa3electricos.com",
-            "failure": "https://alfa3electricos.com",
-            "pending": "https://alfa3electricos.com"
+            "success": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id),
+            "failure": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id),
+            "pending": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id)
         },
         "auto_return": "approved",
         "notification_url": "https://alfa3-flask-fd769661555f.herokuapp.com/webhook/MercadoPago",
