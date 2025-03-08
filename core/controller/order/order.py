@@ -52,34 +52,43 @@ def createOrder():
 def WebhookMercadoPago():
     try:
         data = request.json
+        logger.info(f"Received webhook data: {data}")
+        
         if 'type' not in data or data['type'] != 'payment':
+            logger.info("Invalid webhook event type")
             return jsonify({"ERROR": "INVALID WEBHOOK EVENT"}), HTTPStatus.BAD_REQUEST
 
         payment_id = data['data']['id']
+        logger.info(f"Processing payment ID: {payment_id}")
+        
         sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
         payment_info = sdk.payment().get(payment_id)
 
         if payment_info['status'] == 200:
             payment_status = payment_info['response']['status']
             external_reference = payment_info['response']['external_reference']
+            logger.info(f"Payment status: {payment_status}, External reference: {external_reference}")
 
             table = getSession().Table('orders')
             response = table.update_item(
-            Key={'order_id': external_reference},
-            UpdateExpression="set payment_status=:s",
-            ExpressionAttributeValues={':s': payment_status},
-            ReturnValues="UPDATED_NEW"
+                Key={'order_id': external_reference},
+                UpdateExpression="set STATUS=:s",
+                ExpressionAttributeValues={':s': 'CONFIRMED' if payment_status == 'approved' else 'REJECTED'},
+                ReturnValues="UPDATED_NEW"
             )
 
             if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+                logger.info("Payment status updated successfully")
                 return jsonify({"STATUS": "PAYMENT STATUS UPDATED"}), HTTPStatus.OK
             else:
+                logger.info("Error updating payment status")
                 return jsonify({"ERROR": "ERROR UPDATING PAYMENT STATUS"}), HTTPStatus.INTERNAL_SERVER_ERROR
         else:
+            logger.info("Error fetching payment info")
             return jsonify({"ERROR": "ERROR FETCHING PAYMENT INFO"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
     except Exception as e:
-        logger.info(f"*** *** *** Error al procesar el webhook de MercadoPago: {str(e)}")
+        logger.info(f"*** *** *** Error processing MercadoPago webhook: {str(e)}")
         return jsonify({"ERROR": "INTERNAL SERVER ERROR"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
