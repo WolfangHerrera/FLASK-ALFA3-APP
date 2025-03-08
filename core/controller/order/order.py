@@ -82,11 +82,10 @@ def WebhookMercadoPago():
                 order_info = table.get_item(Key={'order_id': external_reference})
                 if 'Item' in order_info:
                     customer_details = order_info['Item'].get('customer_details', {})
-                    whatsapp_response = sendWhatsAppNotification(customer_details['phoneNumberCustomer'], external_reference, 'confirmed')
-                    if whatsapp_response.get('messages'):
-                        return jsonify({"STATUS": "PAYMENT STATUS UPDATED"}), HTTPStatus.OK
-                    else:
-                        return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
+                    sendWhatsAppNotification(customer_details['phoneNumberCustomer'], external_reference, 'confirmed')
+                    return jsonify({"STATUS": "PAYMENT STATUS UPDATED"}), HTTPStatus.OK
+                else:
+                    return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
             if response['ResponseMetadata']['HTTPStatusCode'] == 200:
                 return jsonify({"STATUS": "PAYMENT STATUS UPDATED"}), HTTPStatus.OK
