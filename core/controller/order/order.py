@@ -38,7 +38,14 @@ def createOrder():
         'total_price': data['TOTAL_PRICE']
     })
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
-        return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
+        numbers_to_send = os.environ.get('NUMBERS_PHONE', ['NOTHINGTOSEEHERE', 'NOTHINGTOSEEHERE'])
+        for number in numbers_to_send:
+            whatsapp_response = sendWhatsAppNotification(number, order_id, 'in_progress')
+
+        if whatsapp_response.get('messages'):
+            return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
+        else:
+            return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
     else:
         return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
@@ -49,14 +56,11 @@ def createOrder():
 def WebhookMercadoPago():
     try:
         data = request.json
-        logger.info(f"Received webhook data: {data}")
         
         if 'type' not in data or data['type'] != 'payment':
-            logger.info("Invalid webhook event type")
             return jsonify({"ERROR": "INVALID WEBHOOK EVENT"}), HTTPStatus.BAD_REQUEST
 
         payment_id = data['data']['id']
-        logger.info(f"Processing payment ID: {payment_id}")
         
         sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
         payment_info = sdk.payment().get(payment_id)
@@ -64,7 +68,6 @@ def WebhookMercadoPago():
         if payment_info['status'] == 200:
             payment_status = payment_info['response']['status']
             external_reference = payment_info['response']['external_reference']
-            logger.info(f"Payment status: {payment_status}, External reference: {external_reference}")
 
             table = getSession().Table('orders')
             response = table.update_item(
@@ -79,25 +82,20 @@ def WebhookMercadoPago():
                 order_info = table.get_item(Key={'order_id': external_reference})
                 if 'Item' in order_info:
                     customer_details = order_info['Item'].get('customer_details', {})
-                    logger.info(f"Customer details: {customer_details}")
-                    whatsapp_response = sendWhatsAppNotification(customer_details['phoneNumberCustomer'], external_reference)
+                    whatsapp_response = sendWhatsAppNotification(customer_details['phoneNumberCustomer'], external_reference, 'confirmed')
                     if whatsapp_response.get('messages'):
                         return jsonify({"STATUS": "PAYMENT STATUS UPDATED"}), HTTPStatus.OK
                     else:
                         return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
             if response['ResponseMetadata']['HTTPStatusCode'] == 200:
-                logger.info("Payment status updated successfully")
                 return jsonify({"STATUS": "PAYMENT STATUS UPDATED"}), HTTPStatus.OK
             else:
-                logger.info("Error updating payment status")
                 return jsonify({"ERROR": "ERROR UPDATING PAYMENT STATUS"}), HTTPStatus.INTERNAL_SERVER_ERROR
         else:
-            logger.info("Error fetching payment info")
             return jsonify({"ERROR": "ERROR FETCHING PAYMENT INFO"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
     except Exception as e:
-        logger.info(f"*** *** *** Error processing MercadoPago webhook: {str(e)}")
         return jsonify({"ERROR": "INTERNAL SERVER ERROR"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
@@ -137,7 +135,7 @@ def generateOrderMP(productsCart, order_id):
     return preference_response['response']['init_point']
 
 
-def sendWhatsAppNotification(to, message):
+def sendWhatsAppNotification(to, message, template_name):
     url = "https://graph.facebook.com/v22.0/{idPhone}/messages".format(idPhone=os.environ.get('ID_PHONE', 'NOTHINGTOSEEHERE'))
     headers = {
         'Content-Type': 'application/json',
@@ -148,7 +146,7 @@ def sendWhatsAppNotification(to, message):
         "to": "57{to}".format(to=to),
         "type": "template",
         "template": {
-            "name": "confirmed",
+            "name": template_name,
             "language": {
                 "code": "en_US"
             },
