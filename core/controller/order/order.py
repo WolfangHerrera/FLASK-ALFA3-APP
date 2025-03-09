@@ -39,7 +39,6 @@ def createOrder():
     })
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
         numbers_to_send = os.environ.get('NUMBERS_PHONE', 'NOTHINGTOSEEHERE')
-        logger.info(f"Enviando notificación a los números: {numbers_to_send}")
         for number in numbers_to_send.split(','):
             logger.info(f"Enviando notificación a: {number}")
             whatsapp_response = sendWhatsAppNotification(number, order_id, 'in_progress')
@@ -68,7 +67,7 @@ def WebhookMercadoPago():
         if payment_info['status'] == 200:
             payment_status = payment_info['response']['status']
             external_reference = payment_info['response']['external_reference']
-
+            logger.info(f"Actualizando estado de la orden: {external_reference} a {payment_status}")
             table = getSession().Table('orders')
             response = table.update_item(
                 Key={'order_id': external_reference},
@@ -124,7 +123,7 @@ def generateOrderMP(productsCart, order_id):
         "items": items,
         "back_urls": {
             "success": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id),
-            "failure": "https://alfa3electricos.com",
+            "failure": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id),
             "pending": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id)
         },
         "auto_return": "approved",
