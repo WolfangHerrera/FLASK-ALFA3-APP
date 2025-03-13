@@ -49,6 +49,30 @@ def createOrder():
     else:
         return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
+@ORDER.route("/webhook/MercadoLibre", methods=['POST'])
+def WebhookMercadoLibre():
+    try:
+        data = request.json
+        if 'topic' not in data or data['topic'] not in ['messages', 'orders']:
+            return jsonify({"ERROR": "INVALID WEBHOOK EVENT"}), HTTPStatus.BAD_REQUEST
+
+        if data['topic'] == 'messages':
+            message_id = data['id']
+            logger.info(f"Received message notification with ID: {message_id}")
+            # Process the message notification as needed
+            # For example, you can fetch message details using MercadoLibre API
+
+        elif data['topic'] == 'orders':
+            order_id = data['id']
+            logger.info(f"Received order notification with ID: {order_id}")
+            # Process the order notification as needed
+            # For example, you can fetch order details using MercadoLibre API
+
+        return jsonify({"STATUS": "WEBHOOK RECEIVED"}), HTTPStatus.OK
+
+    except Exception as e:
+        logger.error(f"Error processing MercadoLibre webhook: {e}")
+        return jsonify({"ERROR": "INTERNAL SERVER ERROR"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 @ORDER.route("/webhook/MercadoPago", methods=['POST'])
