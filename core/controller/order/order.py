@@ -22,32 +22,34 @@ def createOrder():
     data = request.get_json()
     if not data or 'PRODUCTS_CART' not in data or 'CUSTOMER_DETAILS' not in data:
         return jsonify({"ERROR": "MISSING 'PRODUCTS_CART' OR 'CUSTOMER_DETAILS'"}), HTTPStatus.BAD_REQUEST
-    
+
     phone_customer = data['CUSTOMER_DETAILS']['phoneNumberCustomer']
     colombia_tz = pytz.timezone('America/Bogota')
     now = datetime.now(colombia_tz)
     date = now.strftime('%Y%m%d-%H%M')
     order_id = 'A3-' + date + '-' + phone_customer[-4:]
-    url_payment = generateOrderMP(data['PRODUCTS_CART'], order_id)
+    url_payment = generateOrderMP(data['PRODUCTS_CART'], order_id, data['CUSTOMER_DETAILS'])
     table = getSession().Table('orders')
     response = table.put_item(Item={
         'order_id': order_id,
         'products_cart': data['PRODUCTS_CART'],
         'customer_details': data['CUSTOMER_DETAILS'],
-        'status': 'IN PROGRESS',
+        'status': 'IN_PROGRESS',
         'total_price': data['TOTAL_PRICE']
     })
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
         numbers_to_send = os.environ.get('NUMBERS_PHONE', 'NOTHINGTOSEEHERE')
         for number in numbers_to_send.split(','):
             logger.info(f"Enviando notificación a: {number}")
-            whatsapp_response = sendWhatsAppNotification(number, order_id, 'in_progress')
+            whatsapp_response = sendWhatsAppNotification(
+                number, order_id, 'in_progress')
             logger.info(f"Respuesta de WhatsApp: {whatsapp_response}")
 
         return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
-    
+
     else:
         return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
+
 
 @ORDER.route("/webhook/MercadoLibre", methods=['POST'])
 def WebhookMercadoLibre():
@@ -79,33 +81,39 @@ def WebhookMercadoLibre():
 def WebhookMercadoPago():
     try:
         data = request.json
-        
+
         if 'type' not in data or data['type'] != 'payment':
             return jsonify({"ERROR": "INVALID WEBHOOK EVENT"}), HTTPStatus.BAD_REQUEST
 
         payment_id = data['data']['id']
-        
-        sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
+
+        sdk = mercadopago.SDK(os.environ.get(
+            'MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
         payment_info = sdk.payment().get(payment_id)
 
         if payment_info['status'] == 200:
             payment_status = payment_info['response']['status']
             external_reference = payment_info['response']['external_reference']
-            logger.info(f"Actualizando estado de la orden: {external_reference} a {payment_status}")
+            logger.info(
+                f"Actualizando estado de la orden: {external_reference} a {payment_status}")
             table = getSession().Table('orders')
             response = table.update_item(
                 Key={'order_id': external_reference},
                 UpdateExpression="set #s = :s",
                 ExpressionAttributeNames={'#s': 'status'},
-                ExpressionAttributeValues={':s': 'CONFIRMED' if payment_status == 'approved' else 'REJECTED'},
+                ExpressionAttributeValues={
+                    ':s': 'CONFIRMED' if payment_status == 'approved' else 'FAILED'},
                 ReturnValues="UPDATED_NEW"
             )
 
             if payment_status == 'approved':
-                order_info = table.get_item(Key={'order_id': external_reference})
+                order_info = table.get_item(
+                    Key={'order_id': external_reference})
                 if 'Item' in order_info:
-                    customer_details = order_info['Item'].get('customer_details', {})
-                    whatsapp_response = sendWhatsAppNotification(customer_details['phoneNumberCustomer'], external_reference, 'confirmed')
+                    customer_details = order_info['Item'].get(
+                        'customer_details', {})
+                    whatsapp_response = sendWhatsAppNotification(
+                        customer_details['phoneNumberCustomer'], external_reference, 'confirmed')
                     if whatsapp_response.get('messages'):
                         return jsonify({"STATUS": "PAYMENT STATUS UPDATED"}), HTTPStatus.OK
                     else:
@@ -134,7 +142,8 @@ def getOrder(order_id):
 
 
 def generateOrderMP(productsCart, order_id):
-    sdk = mercadopago.SDK(os.environ.get('MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
+    sdk = mercadopago.SDK(os.environ.get(
+        'MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
     items = []
     for product in productsCart:
         items.append({
@@ -145,6 +154,9 @@ def generateOrderMP(productsCart, order_id):
 
     preference_data = {
         "items": items,
+        "payer": {
+            "email": "otrocomprador@mail.com"
+        },
         "back_urls": {
             "success": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id),
             "failure": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id),
@@ -159,7 +171,8 @@ def generateOrderMP(productsCart, order_id):
 
 
 def sendWhatsAppNotification(to, message, template_name):
-    url = "https://graph.facebook.com/v22.0/{idPhone}/messages".format(idPhone=os.environ.get('ID_PHONE', 'NOTHINGTOSEEHERE'))
+    url = "https://graph.facebook.com/v22.0/{idPhone}/messages".format(
+        idPhone=os.environ.get('ID_PHONE', 'NOTHINGTOSEEHERE'))
     headers = {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer {token}'.format(token=os.environ.get('TOKEN_PHONE', 'NOTHINGTOSEEHERE'))
