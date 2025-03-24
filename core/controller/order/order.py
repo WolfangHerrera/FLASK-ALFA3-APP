@@ -158,9 +158,9 @@ def generateOrderMP(productsCart, order_id):
             "email": "otrocomprador@mail.com"
         },
         "back_urls": {
-            "success": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id),
-            "failure": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id),
-            "pending": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id)
+            "success": "https://alfa3electricos.com/order/{order_id}?source=pwa".format(order_id=order_id),
+            "failure": "https://alfa3electricos.com/order/{order_id}?source=pwa".format(order_id=order_id),
+            "pending": "https://alfa3electricos.com/order/{order_id}?source=pwa".format(order_id=order_id)
         },
         "auto_return": "approved",
         "notification_url": "https://alfa3-flask-fd769661555f.herokuapp.com/webhook/MercadoPago",
@@ -185,7 +185,7 @@ def sendWhatsAppNotification(to, message, template_name):
             "template": {
                 "name": template_name,
                 "language": {
-                    "code": "en_US"
+                    "code": "es_CO"
                 },
                 "components": [
                     {
@@ -195,7 +195,7 @@ def sendWhatsAppNotification(to, message, template_name):
                         "parameters": [
                             {
                                 "type": "text",
-                                "text": "order/{message}".format(message=message),
+                                "text": "order/{message}?source=pwa".format(message=message),
                             }
                         ]
                     }
@@ -210,7 +210,7 @@ def sendWhatsAppNotification(to, message, template_name):
             "template": {
                 "name": template_name,
                 "language": {
-                    "code": "en_US"
+                    "code": "es_CO"
                 },
                 "components": [
                     {
@@ -229,7 +229,7 @@ def sendWhatsAppNotification(to, message, template_name):
                         "parameters": [
                             {
                                 "type": "text",
-                                "text": "order/{message}".format(message=message),
+                                "text": "order/{message}?source=pwa".format(message=message),
                             }
                         ]
                     }
