@@ -12,7 +12,7 @@ app.register_blueprint(USER)
 app.register_blueprint(ITEM)
 app.register_blueprint(ORDER)
 
-CORS(app, origins=["https://www.alfa3electricos.com", "https://alfa3electricos.com", "https://mercadopago.com.ar", "http://localhost:8100"])
+CORS(app, origins=["https://www.alfa3electricos.com", "https://alfa3electricos.com", "https://mercadopago.com.ar"])
 
 @app.route('/')
 def hello_world():
