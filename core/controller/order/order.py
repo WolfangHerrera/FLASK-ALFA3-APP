@@ -163,7 +163,7 @@ def generateOrderMP(productsCart, order_id):
             "pending": "https://alfa3electricos.com/order/{order_id}?source=pwa".format(order_id=order_id)
         },
         "auto_return": "approved",
-        "notification_url": "https://alfa3-flask-fd769661555f.herokuapp.com/webhook/MercadoPago",
+        "notification_url": "https://alfa3electricos.com/webhook/MercadoPago",
         "external_reference": order_id
     }
     preference_response = sdk.preference().create(preference_data)
