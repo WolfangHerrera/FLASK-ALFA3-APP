@@ -28,7 +28,7 @@ def createOrder():
     now = datetime.now(colombia_tz)
     date = now.strftime('%Y%m%d-%H%M')
     order_id = 'A3-' + date + '-' + phone_customer[-4:]
-    url_payment = generateOrderMP(data['PRODUCTS_CART'], order_id)
+    url_payment = generateOrderMP(data['PRODUCTS_CART'], order_id, data['CUSTOMER_DETAILS'])
     table = getSession().Table('orders')
     response = table.put_item(Item={
         'order_id': order_id,
@@ -141,7 +141,7 @@ def getOrder(order_id):
         return jsonify({"ERROR": "ORDER NOT FOUND"}), HTTPStatus.NOT_FOUND
 
 
-def generateOrderMP(productsCart, order_id):
+def generateOrderMP(productsCart, order_id, customerDetails):
     sdk = mercadopago.SDK(os.environ.get(
         'MP_ACCESS_TOKEN', 'NOTHINGTOSEEHERE'))
     items = []
@@ -155,15 +155,27 @@ def generateOrderMP(productsCart, order_id):
     preference_data = {
         "items": items,
         "payer": {
-            "email": "otrocomprador@mail.com"
+            "name": customerDetails['fullNameCustomer'],
+            "email": customerDetails['emailCustomer'],
+            "phone": {
+                "area_code": "57",
+                "number": customerDetails['phoneNumberCustomer']
+            },
+            "identification": {
+                "type": customerDetails['documentTypeCustomer'],
+                "number": customerDetails['documentNumberCustomer']
+            },
+            "address": {
+                "street_name": customerDetails['streetAddressCustomer'],
+            }
         },
         "back_urls": {
-            "success": "https://alfa3electricos.com/order/{order_id}?source=pwa".format(order_id=order_id),
-            "failure": "https://alfa3electricos.com/order/{order_id}?source=pwa".format(order_id=order_id),
-            "pending": "https://alfa3electricos.com/order/{order_id}?source=pwa".format(order_id=order_id)
+            "success": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id),
+            "failure": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id),
+            "pending": "https://alfa3electricos.com/order/{order_id}".format(order_id=order_id)
         },
         "auto_return": "approved",
-        "notification_url": "https://alfa3electricos.com/webhook/MercadoPago",
+        "notification_url": "https://backend.alfa3electricos.com/webhook/MercadoPago",
         "external_reference": order_id
     }
     preference_response = sdk.preference().create(preference_data)
@@ -177,17 +189,20 @@ def sendWhatsAppNotification(to, message, template_name):
         'Content-Type': 'application/json',
         'Authorization': 'Bearer {token}'.format(token=os.environ.get('TOKEN_PHONE', 'NOTHINGTOSEEHERE'))
     }
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": "57{to}".format(to=to),
+        "type": "template",
+        "template": {
+            "name": template_name,
+            "language": {
+                "code": "es_CO"
+            },
+            "components": []
+        }
+    }
     if template_name == 'in_progress':
-        payload = {
-            "messaging_product": "whatsapp",
-            "to": "57{to}".format(to=to),
-            "type": "template",
-            "template": {
-                "name": template_name,
-                "language": {
-                    "code": "es_CO"
-                },
-                "components": [
+         payload['template']['components'] = [
                     {
                         "type": "button",
                         "sub_type": "url",
@@ -200,19 +215,8 @@ def sendWhatsAppNotification(to, message, template_name):
                         ]
                     }
                 ]
-            }
-        }
     else:
-        payload = {
-            "messaging_product": "whatsapp",
-            "to": "57{to}".format(to=to),
-            "type": "template",
-            "template": {
-                "name": template_name,
-                "language": {
-                    "code": "es_CO"
-                },
-                "components": [
+        payload['template']['components'] = [
                     {
                         "type": "body",
                         "parameters": [
@@ -234,7 +238,5 @@ def sendWhatsAppNotification(to, message, template_name):
                         ]
                     }
                 ]
-            }
-        }
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
