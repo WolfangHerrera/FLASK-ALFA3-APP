@@ -237,11 +237,18 @@ def sendWhatsAppNotification(to, message, template_name):
                         "parameters": [
                             {
                                 "type": "text",
-                                "text": "order/{message}".format(message=message['order_id']),
-                            },
+                                "text": "https://alfa3electricos.com/order/{order_id}".format(order_id=message['order_id'])
+                            }
+                        ]
+                    },
+                    {
+                        "type": "button",
+                        "sub_type": "url",
+                        "index": 1,
+                        "parameters": [
                             {
                                 "type": "text",
-                                "text": "order/{message}".format(message=message['order_id']),
+                                "text": "https://alfa3electricos.com/order/{order_id}".format(order_id=message['order_id'])
                             }
                         ]
                     }
@@ -269,6 +276,8 @@ def sendWhatsAppNotification(to, message, template_name):
                         ]
                     }
                 ]
+        
+    logger.info(f"PayLOAD WHASTAPP: {payload}")
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
 
