@@ -28,7 +28,6 @@ def createOrder():
     now = datetime.now(colombia_tz)
     date = now.strftime('%Y%m%d-%H%M')
     order_id = 'A3-' + date + '-' + phone_customer[-4:]
-    url_payment = generateOrderMP(data['PRODUCTS_CART'], order_id, data['CUSTOMER_DETAILS'])
     table = getSession().Table('orders')
     response = table.put_item(Item={
         'order_id': order_id,
@@ -40,16 +39,19 @@ def createOrder():
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
         numbers_to_send = os.environ.get('NUMBERS_PHONE', 'NOTHINGTOSEEHERE')
         for number in numbers_to_send.split(','):
-            logger.info(f"Enviando notificación a: {number}")
-            whatsapp_response = sendWhatsAppNotification(
-                number, order_id, 'in_progress')
-            logger.info(f"Respuesta de WhatsApp: {whatsapp_response}")
+            sendWhatsAppNotification(number, order_id, 'in_progress')
+        
+        if validateMPPaymentMethod(data['CUSTOMER_DETAILS']['paymentMethodCustomer']) :
+            status = 'MP'
+            data = generateOrderMP(data['PRODUCTS_CART'], order_id, data['CUSTOMER_DETAILS'])
+        else:
+            status = 'NOT_MP'
+            sendWhatsAppNotification(phone_customer, {'price' : data['TOTAL_PRICE'], 'order_id' : order_id}, 'nequi')
 
-        return jsonify({"ORDER_ID": order_id, "URL_PAYMENT": url_payment}), HTTPStatus.OK
-
+        return jsonify({"ORDER_ID": order_id, "STATUS" : status, "DATA": data}), HTTPStatus.OK
     else:
         return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
-
+    
 
 @ORDER.route("/webhook/MercadoLibre", methods=['POST'])
 def WebhookMercadoLibre():
@@ -210,7 +212,35 @@ def sendWhatsAppNotification(to, message, template_name):
                         "parameters": [
                             {
                                 "type": "text",
-                                "text": "order/{message}?source=pwa".format(message=message),
+                                "text": "order/{message}".format(message=message),
+                            }
+                        ]
+                    }
+                ]
+         
+    if template_name == 'nequi':
+         payload['template']['components'] = [
+                    {
+                        "type": "body",
+                        "parameters": [
+                            {
+                                "type": "text",
+                                "text": message['price']
+                            }
+                        ]
+                    },
+                    {
+                        "type": "button",
+                        "sub_type": "url",
+                        "index": 0,
+                        "parameters": [
+                            {
+                                "type": "text",
+                                "text": "order/{message}".format(message=message['order_id']),
+                            },
+                            {
+                                "type": "text",
+                                "text": "order/{message}".format(message=message['order_id']),
                             }
                         ]
                     }
@@ -233,10 +263,17 @@ def sendWhatsAppNotification(to, message, template_name):
                         "parameters": [
                             {
                                 "type": "text",
-                                "text": "order/{message}?source=pwa".format(message=message),
+                                "text": "order/{message}".format(message=message),
                             }
                         ]
                     }
                 ]
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
+
+
+def validateMPPaymentMethod(payment_method):
+    mp_payment_methods = ['CARD', 'ACCOUNT']
+    if payment_method not in mp_payment_methods:
+        return False
+    return True
