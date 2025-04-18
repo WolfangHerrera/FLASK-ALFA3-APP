@@ -43,12 +43,13 @@ def createOrder():
         
         if validateMPPaymentMethod(data['CUSTOMER_DETAILS']['paymentMethodCustomer']) :
             status = 'MP'
-            data = generateOrderMP(data['PRODUCTS_CART'], order_id, data['CUSTOMER_DETAILS'])
+            url_payment = generateOrderMP(data['PRODUCTS_CART'], order_id, data['CUSTOMER_DETAILS'])
         else:
             status = 'NOT_MP'
             sendWhatsAppNotification(phone_customer, {'price' : data['TOTAL_PRICE'], 'order_id' : order_id}, 'nequi')
+            url_payment = 'https://alfa3electricos.com/order/{order_id}'.format(order_id=order_id)
 
-        return jsonify({"ORDER_ID": order_id, "STATUS" : status, "DATA": data}), HTTPStatus.OK
+        return jsonify({"ORDER_ID": order_id, "STATUS" : status, "URL_PAYMENT": url_payment}), HTTPStatus.OK
     else:
         return jsonify({"ERROR": "ERROR CREATING ORDER"}), HTTPStatus.INTERNAL_SERVER_ERROR
     
