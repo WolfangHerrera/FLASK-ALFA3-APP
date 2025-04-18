@@ -237,7 +237,7 @@ def sendWhatsAppNotification(to, message, template_name):
                         "parameters": [
                             {
                                 "type": "text",
-                                "text": "https://alfa3electricos.com/order/{order_id}".format(order_id=message['order_id'])
+                                "text": "order/{order_id}".format(order_id=message['order_id'])
                             }
                         ]
                     },
@@ -248,7 +248,7 @@ def sendWhatsAppNotification(to, message, template_name):
                         "parameters": [
                             {
                                 "type": "text",
-                                "text": "https://alfa3electricos.com/order/{order_id}".format(order_id=message['order_id'])
+                                "text": "order/{order_id}".format(order_id=message['order_id'])
                             }
                         ]
                     }
