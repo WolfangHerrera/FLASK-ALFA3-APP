@@ -219,7 +219,7 @@ def sendWhatsAppNotification(to, message, template_name):
                     }
                 ]
          
-    if template_name == 'nequi':
+    if template_name == 'nequi_payment':
          payload['template']['components'] = [
                     {
                         "type": "body",
