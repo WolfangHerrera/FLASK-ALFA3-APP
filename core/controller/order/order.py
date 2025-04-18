@@ -46,7 +46,7 @@ def createOrder():
             url_payment = generateOrderMP(data['PRODUCTS_CART'], order_id, data['CUSTOMER_DETAILS'])
         else:
             status = 'NOT_MP'
-            sendWhatsAppNotification(phone_customer, {'price' : data['TOTAL_PRICE'], 'order_id' : order_id}, 'nequi')
+            sendWhatsAppNotification(phone_customer, {'price' : data['TOTAL_PRICE'], 'order_id' : order_id}, 'nequi_payment')
             url_payment = 'https://alfa3electricos.com/order/{order_id}'.format(order_id=order_id)
 
         return jsonify({"ORDER_ID": order_id, "STATUS" : status, "URL_PAYMENT": url_payment}), HTTPStatus.OK
