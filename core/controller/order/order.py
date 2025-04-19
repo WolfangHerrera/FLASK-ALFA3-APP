@@ -222,7 +222,7 @@ def sendWhatsAppNotification(to, message, template_name):
                     }
                 ]
          
-    if template_name == 'nequi_payment':
+    elif template_name == 'nequi_payment':
          payload['template']['components'] = [
                     {
                         "type": "header",
