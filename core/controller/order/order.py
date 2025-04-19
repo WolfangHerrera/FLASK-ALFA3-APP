@@ -39,14 +39,17 @@ def createOrder():
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
         numbers_to_send = os.environ.get('NUMBERS_PHONE', 'NOTHINGTOSEEHERE')
         for number in numbers_to_send.split(','):
-            sendWhatsAppNotification(number, order_id, 'in_progress')
+            logger.info(f"Enviando notificación a: {number}")
+            whatsapp_response = sendWhatsAppNotification(number, order_id, 'in_progress')
+            logger.info(f"Respuesta de WhatsApp: {whatsapp_response}")
         
         if validateMPPaymentMethod(data['CUSTOMER_DETAILS']['paymentMethodCustomer']) :
             status = 'MP'
             url_payment = generateOrderMP(data['PRODUCTS_CART'], order_id, data['CUSTOMER_DETAILS'])
         else:
             status = 'NOT_MP'
-            sendWhatsAppNotification(phone_customer, {'price' : data['TOTAL_PRICE'], 'order_id' : order_id}, 'nequi_payment')
+            whatsapp_response = sendWhatsAppNotification(phone_customer, {'price' : data['TOTAL_PRICE'], 'order_id' : order_id}, 'nequi_payment')
+            logger.info(f"Respuesta de WhatsApp: {whatsapp_response}")
             url_payment = 'https://alfa3electricos.com/order/{order_id}'.format(order_id=order_id)
 
         return jsonify({"ORDER_ID": order_id, "STATUS" : status, "URL_PAYMENT": url_payment}), HTTPStatus.OK
