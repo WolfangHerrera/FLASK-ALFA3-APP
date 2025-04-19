@@ -225,6 +225,17 @@ def sendWhatsAppNotification(to, message, template_name):
     if template_name == 'nequi_payment':
          payload['template']['components'] = [
                     {
+                        "type": "header",
+                        "parameters": [
+                            {
+                                "type": "image",
+                                "image": {
+                                    "link": "https://alfa3-assets.s3.us-east-1.amazonaws.com/qr_nequi.jpg"
+                                }
+                            }
+                        ]
+                    },
+                    {
                         "type": "body",
                         "parameters": [
                             {
