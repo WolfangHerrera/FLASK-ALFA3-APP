@@ -195,7 +195,7 @@ def generateOrderMP(productsCart, order_id, customerDetails):
     return preference_response['response']['init_point']
 
 
-def sendWhatsAppNotification(to, message, template_name, order_id):
+def sendWhatsAppNotification(to, message, order_id, template_name):
     url = "https://graph.facebook.com/v22.0/{idPhone}/messages".format(
         idPhone=os.environ.get('ID_PHONE', 'NOTHINGTOSEEHERE'))
     headers = {
