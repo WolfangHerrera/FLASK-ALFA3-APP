@@ -48,7 +48,7 @@ def createOrder():
             url_payment = generateOrderMP(data['PRODUCTS_CART'], order_id, data['CUSTOMER_DETAILS'])
         else:
             status = 'NOT_MP'
-            whatsapp_response = sendWhatsAppNotification(phone_customer, {'price' : data['TOTAL_PRICE'], 'order_id' : order_id}, 'nequi_payment')
+            whatsapp_response = sendWhatsAppNotification(phone_customer, {'price' : data['TOTAL_PRICE'], 'order_id' : order_id}, 'payment')
             logger.info(f"Respuesta de WhatsApp: {whatsapp_response}")
             url_payment = 'https://alfa3electricos.com/order/{order_id}'.format(order_id=order_id)
 
@@ -222,7 +222,7 @@ def sendWhatsAppNotification(to, message, template_name):
                     }
                 ]
          
-    elif template_name == 'nequi_payment':
+    elif template_name == 'payment':
          payload['template']['components'] = [
                     {
                         "type": "header",
@@ -240,7 +240,16 @@ def sendWhatsAppNotification(to, message, template_name):
                         "parameters": [
                             {
                                 "type": "text",
-                                "text": message['price']
+                                "text": 'NEQUI'
+                            }
+                        ]
+                    },
+                                        {
+                        "type": "body",
+                        "parameters": [
+                            {
+                                "type": "text",
+                                "text": format_number_with_commas(message['price'])
                             }
                         ]
                     },
@@ -294,6 +303,10 @@ def sendWhatsAppNotification(to, message, template_name):
     logger.info(f"PayLOAD WHASTAPP: {payload}")
     response = requests.post(url, json=payload, headers=headers)
     return response.json()
+
+
+def format_number_with_commas(number_str):
+        return "{:,}".format(int(number_str))
 
 
 def validateMPPaymentMethod(payment_method):
