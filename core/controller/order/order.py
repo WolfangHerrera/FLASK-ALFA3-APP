@@ -44,7 +44,7 @@ def createOrder():
         numbers_to_send = os.environ.get('NUMBERS_PHONE', 'NOTHINGTOSEEHERE')
         for number in numbers_to_send.split(','):
             logger.info(f"Enviando notificación a: {number}")
-            whatsapp_response = sendWhatsAppNotification(number, order_id, 'in_progress')
+            whatsapp_response = sendWhatsAppNotification(number, '',order_id, 'in_progress')
             logger.info(f"Respuesta de WhatsApp: {whatsapp_response}")
         
         paymenthod = data['CUSTOMER_DETAILS']['paymentMethodCustomer']
