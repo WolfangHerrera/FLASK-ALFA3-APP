@@ -13,6 +13,10 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+URL_IMAGES = {
+    "NEQUI": "https://alfa3-assets.s3.us-east-1.amazonaws.com/qr_nequi.jpg",
+    "DAVIPLATA": "https://alfa3-assets.s3.us-east-1.amazonaws.com/qr_daviplata.jpg",
+}
 
 ORDER = Blueprint('ORDER', __name__)
 
@@ -43,12 +47,14 @@ def createOrder():
             whatsapp_response = sendWhatsAppNotification(number, order_id, 'in_progress')
             logger.info(f"Respuesta de WhatsApp: {whatsapp_response}")
         
-        if validateMPPaymentMethod(data['CUSTOMER_DETAILS']['paymentMethodCustomer']) :
+        paymenthod = data['CUSTOMER_DETAILS']['paymentMethodCustomer']
+
+        if validateMPPaymentMethod(paymenthod) :
             status = 'MP'
             url_payment = generateOrderMP(data['PRODUCTS_CART'], order_id, data['CUSTOMER_DETAILS'])
         else:
             status = 'NOT_MP'
-            whatsapp_response = sendWhatsAppNotification(phone_customer, {'price' : data['TOTAL_PRICE'], 'order_id' : order_id}, 'payment')
+            whatsapp_response = sendWhatsAppNotification(phone_customer, paymenthod, order_id, 'payment')
             logger.info(f"Respuesta de WhatsApp: {whatsapp_response}")
             url_payment = 'https://alfa3electricos.com/order/{order_id}'.format(order_id=order_id)
 
@@ -119,7 +125,7 @@ def WebhookMercadoPago():
                     customer_details = order_info['Item'].get(
                         'customer_details', {})
                     whatsapp_response = sendWhatsAppNotification(
-                        customer_details['phoneNumberCustomer'], external_reference, 'confirmed')
+                        customer_details['phoneNumberCustomer'], '', external_reference,'confirmed')
                     if whatsapp_response.get('messages'):
                         return jsonify({"STATUS": "PAYMENT STATUS UPDATED"}), HTTPStatus.OK
                     else:
@@ -188,7 +194,7 @@ def generateOrderMP(productsCart, order_id, customerDetails):
     return preference_response['response']['init_point']
 
 
-def sendWhatsAppNotification(to, message, template_name):
+def sendWhatsAppNotification(to, message, template_name, order_id):
     url = "https://graph.facebook.com/v22.0/{idPhone}/messages".format(
         idPhone=os.environ.get('ID_PHONE', 'NOTHINGTOSEEHERE'))
     headers = {
@@ -216,7 +222,7 @@ def sendWhatsAppNotification(to, message, template_name):
                         "parameters": [
                             {
                                 "type": "text",
-                                "text": "order/{message}".format(message=message),
+                                "text": "order/{message}".format(message=order_id),
                             }
                         ]
                     }
@@ -230,7 +236,7 @@ def sendWhatsAppNotification(to, message, template_name):
                             {
                                 "type": "image",
                                 "image": {
-                                    "link": "https://alfa3-assets.s3.us-east-1.amazonaws.com/qr_nequi.jpg"
+                                    "link": URL_IMAGES[message]
                                 }
                             }
                         ]
@@ -255,7 +261,7 @@ def sendWhatsAppNotification(to, message, template_name):
                         "parameters": [
                             {
                                 "type": "text",
-                                "text": "order/{order_id}".format(order_id=message['order_id'])
+                                "text": "order/{order_id}".format(order_id=order_id)
                             }
                         ]
                     },
@@ -266,7 +272,7 @@ def sendWhatsAppNotification(to, message, template_name):
                         "parameters": [
                             {
                                 "type": "text",
-                                "text": "order/{order_id}".format(order_id=message['order_id'])
+                                "text": "order/{order_id}".format(order_id=order_id)
                             }
                         ]
                     }
@@ -289,7 +295,7 @@ def sendWhatsAppNotification(to, message, template_name):
                         "parameters": [
                             {
                                 "type": "text",
-                                "text": "order/{message}".format(message=message),
+                                "text": "order/{message}".format(message=order_id),
                             }
                         ]
                     }
@@ -302,6 +308,7 @@ def sendWhatsAppNotification(to, message, template_name):
 
 def format_number_with_commas(number_str):
         return "{:,}".format(int(number_str))
+
 
 
 def validateMPPaymentMethod(payment_method):
