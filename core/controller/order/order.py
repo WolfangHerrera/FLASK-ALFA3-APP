@@ -247,7 +247,7 @@ def sendWhatsAppNotification(to, message, order_id, template_name):
                         "parameters": [
                             {
                                 "type": "text",
-                                "text": 'NEQUI'
+                                "text": message['paymenthod']
                             },
                             {
                                 "type": "text",
