@@ -241,12 +241,7 @@ def sendWhatsAppNotification(to, message, template_name):
                             {
                                 "type": "text",
                                 "text": 'NEQUI'
-                            }
-                        ]
-                    },
-                                        {
-                        "type": "body",
-                        "parameters": [
+                            },
                             {
                                 "type": "text",
                                 "text": format_number_with_commas(message['price'])
