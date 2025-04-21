@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 URL_IMAGES = {
     "NEQUI": "https://alfa3-assets.s3.us-east-1.amazonaws.com/qr_nequi.jpg",
     "DAVIPLATA": "https://alfa3-assets.s3.us-east-1.amazonaws.com/qr_daviplata.jpg",
+    "BANCOLOMBIA": "https://alfa3-assets.s3.us-east-1.amazonaws.com/qr_bancolombia.jpg",
 }
 
 ORDER = Blueprint('ORDER', __name__)
