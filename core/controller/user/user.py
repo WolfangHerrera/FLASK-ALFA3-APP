@@ -15,6 +15,15 @@ def registerUser():
         return jsonify({"MESSAGE": "MISSING 'USER' OR 'PASSWORD'"}), HTTPStatus.BAD_REQUEST
     
     table = getSession().Table('users')
+
+    existing_user = table.get_item(
+        Key={
+            'username': data['USERNAME']
+        }
+    )
+    
+    if 'Item' in existing_user:
+        return jsonify({"MESSAGE": "USER ALREADY EXIST"}), HTTPStatus.NOT_FOUND
         
     response = table.put_item(
         Item={
