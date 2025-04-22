@@ -25,15 +25,21 @@ def registerUser():
     if 'Item' in existing_user:
         return jsonify({"MESSAGE": "USER ALREADY EXIST"}), HTTPStatus.NOT_FOUND
         
-    response = table.put_item(
-        Item={
-            'username': data['USERNAME'],
-            'password': generateHashForPassword(data['PASSWORD']),
-            'role': setRolByName(data['USERNAME']),
-        }
-    )
-
-    return response, HTTPStatus.OK
+    try:
+        response = table.put_item(
+            Item={
+                'username': data['USERNAME'],
+                'password': generateHashForPassword(data['PASSWORD']),
+                'role': setRolByName(data['USERNAME']),
+            }
+        )
+        if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+            return jsonify({"MESSAGE": "USER REGISTER SUCCESSFUL"}), HTTPStatus.CREATED
+        else:
+            return jsonify({"MESSAGE": "FAILED TO REGISTER USER"}), HTTPStatus.INTERNAL_SERVER_ERROR
+        
+    except Exception as e:
+        return jsonify({"MESSAGE": f"ERROR: {str(e)}"}), HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 @USER.route("/loginUser", methods=['POST'])
