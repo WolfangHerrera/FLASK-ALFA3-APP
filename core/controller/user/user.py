@@ -49,7 +49,7 @@ def registerUser():
 
 
 @USER.route("/loginUser", methods=['POST'])
-def login():
+def loginUser():
     data = request.get_json()
     if not data or 'USERNAME' not in data or 'PASSWORD' not in data:
         return jsonify({"MESSAGE": "MISSING 'USER' OR 'PASSWORD'"}), HTTPStatus.BAD_REQUEST
@@ -69,3 +69,40 @@ def login():
         return jsonify({"MESSAGE": "INVALID PASSWORD"}), HTTPStatus.UNAUTHORIZED
     
     return jsonify(response['Item']), HTTPStatus.OK
+
+
+@USER.route("/updateUser", methods=['UPDATE'])
+def updateUser():
+    data = request.get_json()
+    if not data or 'USERNAME' not in data:
+        return jsonify({"MESSAGE": "MISSING 'USER' OR 'PASSWORD'"}), HTTPStatus.BAD_REQUEST
+    
+    table = getSession().Table('users')
+    
+    response = table.get_item(
+        Key={
+            'username': data['USERNAME']
+        }
+    )
+    
+    if 'Item' not in response:
+        return jsonify({"MESSAGE": "USER NOT EXIST"}), HTTPStatus.NOT_FOUND
+    
+    try:
+        response = table.update_item(
+            Key={
+                'username': data['USERNAME']
+            },
+            UpdateExpression="SET customer_details = :customer_details",
+            ExpressionAttributeValues={
+                ':customer_details': data['CUSTOMER_DETAILS']
+            }
+        )
+        logger.info(f"RESPONSE: {response}")
+        if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+            return jsonify({"MESSAGE": "USER UPDATED SUCCESSFUL"}), HTTPStatus.OK
+        else:
+            return jsonify({"MESSAGE": "FAILED TO UPDATE USER"}), HTTPStatus.INTERNAL_SERVER_ERROR
+        
+    except Exception as e:
+        return jsonify({"MESSAGE": f"ERROR: {str(e)}"}), HTTPStatus.INTERNAL_SERVER_ERROR
