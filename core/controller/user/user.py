@@ -1,11 +1,13 @@
+import logging
 from flask import Blueprint
-import uuid
 from http import HTTPStatus
 from flask import request, jsonify
 
 from core.config.aws_config import getSession
 from core.utils.user.user import generateHashForPassword, setRolByName, validatePassword
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 USER = Blueprint('USER', __name__)
 
@@ -14,6 +16,7 @@ def registerUser():
     if not data or 'USERNAME' not in data or 'PASSWORD' not in data:
         return jsonify({"MESSAGE": "MISSING 'USER' OR 'PASSWORD'"}), HTTPStatus.BAD_REQUEST
     
+    logger.info(f"DATA -- REGISTER: {data}")
     table = getSession().Table('users')
 
     existing_user = table.get_item(
@@ -21,6 +24,8 @@ def registerUser():
             'username': data['USERNAME']
         }
     )
+
+    logger.info(f"EXISTING USER: {existing_user}")
     
     if 'Item' in existing_user:
         return jsonify({"MESSAGE": "USER ALREADY EXIST"}), HTTPStatus.NOT_FOUND
@@ -30,9 +35,9 @@ def registerUser():
             Item={
                 'username': data['USERNAME'],
                 'password': generateHashForPassword(data['PASSWORD']),
-                'role': setRolByName(data['USERNAME']),
             }
         )
+        logger.info(f"RESPONSE: {response}")
         if response['ResponseMetadata']['HTTPStatusCode'] == 200:
             return jsonify({"MESSAGE": "USER REGISTER SUCCESSFUL"}), HTTPStatus.CREATED
         else:
