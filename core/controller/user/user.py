@@ -85,11 +85,12 @@ def updateUser():
             'username': data['USERNAME']
         }
     )
+
+    logger.info(f"EXISTING USER: {response}")
     
     if 'Item' not in response:
         return jsonify({"MESSAGE": "USER NOT EXIST"}), HTTPStatus.NOT_FOUND
     
-    logger.info(f"EXISTING USER: {response}")
     try:
         response = table.update_item(
             Key={
