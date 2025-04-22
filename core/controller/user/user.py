@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 USER = Blueprint('USER', __name__)
 
+@USER.route("/registerUser", methods=['POST'])
 def registerUser():
     data = request.get_json()
     if not data or 'USERNAME' not in data or 'PASSWORD' not in data:
