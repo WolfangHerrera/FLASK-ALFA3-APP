@@ -71,7 +71,7 @@ def loginUser():
     return jsonify(response['Item']), HTTPStatus.OK
 
 
-@USER.route("/updateUser", methods=['UPDATE'])
+@USER.route("/updateUser", methods=['PUT'])
 def updateUser():
     data = request.get_json()
     if not data or 'USERNAME' not in data:
