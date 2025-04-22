@@ -74,6 +74,7 @@ def loginUser():
 @USER.route("/updateUser", methods=['PUT'])
 def updateUser():
     data = request.get_json()
+    logger.info(f"DATA -- UPDATE: {data}")
     if not data or 'USERNAME' not in data:
         return jsonify({"MESSAGE": "MISSING 'USER' OR 'PASSWORD'"}), HTTPStatus.BAD_REQUEST
     
@@ -88,6 +89,7 @@ def updateUser():
     if 'Item' not in response:
         return jsonify({"MESSAGE": "USER NOT EXIST"}), HTTPStatus.NOT_FOUND
     
+    logger.info(f"EXISTING USER: {response}")
     try:
         response = table.update_item(
             Key={
