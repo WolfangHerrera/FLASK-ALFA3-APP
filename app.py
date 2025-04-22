@@ -12,7 +12,8 @@ app.register_blueprint(USER)
 app.register_blueprint(ITEM)
 app.register_blueprint(ORDER)
 
-CORS(app, origins=["https://alfa3.wolfangdevs.com", "https://alfa3electricos.com", "https://mercadopago.com"])
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+# CORS(app, origins=["https://alfa3.wolfangdevs.com", "https://alfa3electricos.com", "https://mercadopago.com"])
 
 @app.route('/')
 def hello_world():
