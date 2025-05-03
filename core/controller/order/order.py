@@ -23,8 +23,9 @@ def get_order(order_id):
     else:
         return jsonify({"ERROR": "ORDER NOT FOUND"}), HTTPStatus.NOT_FOUND
     
+
 @ORDER.route("/getOrdersByCustomerId/<customer_id>", methods=['GET'])
-def get_order(customer_id):
+def get_order_by_customerid(customer_id):
     if not customer_id:
         return jsonify({"ERROR": "MISSING 'CUSTOMER ID'"}), HTTPStatus.BAD_REQUEST
     
