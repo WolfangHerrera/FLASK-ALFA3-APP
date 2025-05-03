@@ -37,11 +37,12 @@ def create_order():
     table = getSession().Table('orders')
     response = table.put_item(Item={
         'order_id': order_id,
-        'customer_id': customer_id,
+        'customer_id': str(customer_id),
         'products_cart': data['PRODUCTS_CART'],
         'customer_details': data['CUSTOMER_DETAILS'],
         'status': 'IN_PROGRESS',
-        'total_price': data['TOTAL_PRICE']
+        'total_price': data['TOTAL_PRICE'],
+        'item_count': data['ITEM_COUNT'],
     })
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
         numbers_to_send = os.environ.get('NUMBERS_PHONE', 'NOTHINGTOSEEHERE')
@@ -59,7 +60,7 @@ def create_order():
             status = 'NOT_MP'
             whatsapp_response = send_whatsapp_notification(phone_customer, {'price' : data['TOTAL_PRICE'], 'paymenthod' : paymenthod}, order_id, 'payment')
             logger.info(f"Respuesta de WhatsApp: {whatsapp_response}")
-            url_payment = 'https://alfa3electricos.com/order/{order_id}'.format(order_id=order_id)
+            url_payment = '/order/{order_id}'.format(order_id=order_id)
 
         return jsonify({"ORDER_ID": order_id, "STATUS" : status, "URL_PAYMENT": url_payment}), HTTPStatus.OK
     else:

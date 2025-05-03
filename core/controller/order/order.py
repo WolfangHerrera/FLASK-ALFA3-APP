@@ -2,8 +2,9 @@ from flask import Blueprint
 from http import HTTPStatus
 from flask import jsonify
 import logging
+from boto3.dynamodb.conditions import Key
 
-from core.config.aws_config import getSession
+from core.config.aws_config import getSession, createTable
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,9 +31,13 @@ def get_order_by_customerid(customer_id):
         return jsonify({"ERROR": "MISSING 'CUSTOMER ID'"}), HTTPStatus.BAD_REQUEST
     
     table = getSession().Table('orders')
-    response = table.get_item(Key={'customer_id': customer_id})
-    if 'Item' in response:
-        return jsonify(response['Item']), HTTPStatus.OK
+    response = table.query(
+        IndexName='CustomerIndex',
+        KeyConditionExpression=Key('customer_id').eq(customer_id)
+    )
+    
+    if 'Items' in response:
+        return jsonify(response['Items']), HTTPStatus.OK
     else:
         return jsonify({"ERROR": "ORDER NOT FOUND"}), HTTPStatus.NOT_FOUND
     

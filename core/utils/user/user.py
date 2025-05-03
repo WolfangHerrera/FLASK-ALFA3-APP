@@ -11,11 +11,6 @@ def validatePassword(password : str, hashedPassword : str) :
 
 
 def setRolByName(username : str) :
-    rolesByUser = {
-        'andrey': 'ADMIN',
-        'valentina': 'ADMIN',
-        'elkin': 'SELLER',
-        'maria': 'SELLER',
-    }
+    rolesByUser = {}
 
     return rolesByUser.get(username, 'USER')

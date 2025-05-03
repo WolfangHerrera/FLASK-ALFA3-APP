@@ -11,7 +11,6 @@ def getSession():
        region_name='us-east-1'
    )
 
-
 def createTable(tableName: str, keyName: str):
     dynamodb = getSession()
     table = dynamodb.create_table(
@@ -34,3 +33,52 @@ def createTable(tableName: str, keyName: str):
         }
     )
     return table
+
+
+def createTableGSI(tableName: str, keyName: str, gsiName: str, gsiKeyName: str):
+    dynamodb = getSession()
+    
+    table = dynamodb.create_table(
+        TableName=tableName,
+        KeySchema=[
+            {
+                'AttributeName': keyName,
+                'KeyType': 'HASH'
+            }
+        ],
+        AttributeDefinitions=[
+            {
+                'AttributeName': keyName,
+                'AttributeType': 'S'
+            },
+            {
+                'AttributeName': gsiKeyName,
+                'AttributeType': 'S'
+            }
+        ],
+        ProvisionedThroughput={
+            'ReadCapacityUnits': 5,
+            'WriteCapacityUnits': 5
+        },
+        GlobalSecondaryIndexes=[
+            {
+                'IndexName': gsiName,
+                'KeySchema': [
+                    {
+                        'AttributeName': gsiKeyName,
+                        'KeyType': 'HASH'
+                    }
+                ],
+                'Projection': {
+                    'ProjectionType': 'ALL'
+                },
+                'ProvisionedThroughput': {
+                    'ReadCapacityUnits': 5,
+                    'WriteCapacityUnits': 5
+                }
+            }
+        ]
+    )
+    
+    return table
+
