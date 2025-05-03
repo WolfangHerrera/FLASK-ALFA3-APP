@@ -22,21 +22,16 @@ def get_order(order_id):
         return jsonify(response['Item']), HTTPStatus.OK
     else:
         return jsonify({"ERROR": "ORDER NOT FOUND"}), HTTPStatus.NOT_FOUND
-
-
-@ORDER.route("/getOrders/<order_id>/customer/<customer_id>", methods=['GET'])
-def get_orders(order_id, customer_id):
-    if not order_id or not customer_id:
-        return jsonify({"ERROR": "MISSING 'ORDER ID' OR 'CUSTOMER ID'"}), HTTPStatus.BAD_REQUEST
+    
+@ORDER.route("/getOrdersByCustomerId/<customer_id>", methods=['GET'])
+def get_order(customer_id):
+    if not customer_id:
+        return jsonify({"ERROR": "MISSING 'CUSTOMER ID'"}), HTTPStatus.BAD_REQUEST
     
     table = getSession().Table('orders')
-    response = table.get_item(
-        Key={
-            'order_id': order_id,
-            'customer_id': customer_id
-        }
-    )
+    response = table.get_item(Key={'customer_id': customer_id})
     if 'Item' in response:
         return jsonify(response['Item']), HTTPStatus.OK
     else:
         return jsonify({"ERROR": "ORDER NOT FOUND"}), HTTPStatus.NOT_FOUND
+    
