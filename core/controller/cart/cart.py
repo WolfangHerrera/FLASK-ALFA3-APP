@@ -29,6 +29,7 @@ def create_order():
         return jsonify({"ERROR": "MISSING 'PRODUCTS_CART' OR 'CUSTOMER_DETAILS'"}), HTTPStatus.BAD_REQUEST
 
     phone_customer = data['CUSTOMER_DETAILS']['phoneNumberCustomer']
+    customer_id = data['CUSTOMER_DETAILS']['documentNumberCustomer']
     colombia_tz = pytz.timezone('America/Bogota')
     now = datetime.now(colombia_tz)
     date = now.strftime('%Y%m%d-%H%M')
@@ -36,6 +37,7 @@ def create_order():
     table = getSession().Table('orders')
     response = table.put_item(Item={
         'order_id': order_id,
+        'customer_id': customer_id,
         'products_cart': data['PRODUCTS_CART'],
         'customer_details': data['CUSTOMER_DETAILS'],
         'status': 'IN_PROGRESS',
