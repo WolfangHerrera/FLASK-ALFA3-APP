@@ -17,6 +17,7 @@ URL_IMAGES = {
     "NEQUI": "https://alfa3-assets.s3.us-east-1.amazonaws.com/qr_nequi.jpg",
     "DAVIPLATA": "https://alfa3-assets.s3.us-east-1.amazonaws.com/qr_daviplata.jpg",
     "BANCOLOMBIA": "https://alfa3-assets.s3.us-east-1.amazonaws.com/qr_bancolombia.jpg",
+    "MELI": "https://alfa3-assets.s3.us-east-1.amazonaws.com/qr_meli.jpg",
 }
 
 CART = Blueprint('CART', __name__)
@@ -41,7 +42,9 @@ def create_order():
         'products_cart': data['PRODUCTS_CART'],
         'customer_details': data['CUSTOMER_DETAILS'],
         'status': 'IN_PROGRESS',
+        'sub_status': 'NOT_PAID',
         'total_price': data['TOTAL_PRICE'],
+        'total_price_min': data['TOTAL_PRICE_MIN'],
         'item_count': data['ITEM_COUNT'],
     })
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
