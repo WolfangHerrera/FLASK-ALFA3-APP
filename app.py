@@ -4,6 +4,7 @@ from flask_cors import CORS
 from core.controller.item.item import ITEM
 from core.controller.cart.cart import CART
 from core.controller.order.order import ORDER
+from core.controller.pdf.pdf import PDF
 from core.controller.user.user import USER
 from dotenv import load_dotenv
 
@@ -15,10 +16,11 @@ app.register_blueprint(USER)
 app.register_blueprint(ITEM)
 app.register_blueprint(CART)
 app.register_blueprint(ORDER)
+app.register_blueprint(PDF)
 load_dotenv()
 
 
-# CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+#CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 CORS(app, origins=["https://alfa3.wolfangdevs.com", "https://alfa3electricos.com", "https://mercadopago.com"])
 
 @app.route('/')
