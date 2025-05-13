@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, request
 from http import HTTPStatus
 from flask import jsonify
 import logging
@@ -23,6 +23,27 @@ def get_order(order_id):
         return jsonify(response['Item']), HTTPStatus.OK
     else:
         return jsonify({"ERROR": "ORDER NOT FOUND"}), HTTPStatus.NOT_FOUND
+    
+
+@ORDER.route("/updateOrdersWithSubStatus/<status>", methods=['PUT'])
+def update_order(status):
+    list_orders = request.get_json()
+    if not list_orders or not status:
+        return jsonify({"ERROR": "MISSING 'ORDER ID' OR 'STATUS'"}), HTTPStatus.BAD_REQUEST
+    
+    print(list_orders)
+    for order_id in list_orders['LIST_ORDERS']:        
+        table = getSession().Table('orders')
+        response = table.get_item(Key={'order_id': order_id})
+        
+        if 'Item' in response:
+            item = response['Item']
+            item['sub_status'] = status
+            table.put_item(Item=item)
+            print(f"Updated order {order_id} with status {status}")
+
+
+    return jsonify(item), HTTPStatus.OK
     
 
 @ORDER.route("/getOrdersBySubStatus/<sub_status>", methods=['GET'])
