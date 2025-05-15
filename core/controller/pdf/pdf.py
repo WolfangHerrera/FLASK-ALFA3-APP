@@ -64,7 +64,7 @@ def generate_mercadolibre_pdf():
 
                 if x1 > x0 and y1 > y0:
                     cropped = page.crop((x0, y0, x1, y1))
-                    img = cropped.to_image(resolution=200)
+                    img = cropped.to_image(resolution=500)
 
                     img_byte_arr = BytesIO()
                     img.save(img_byte_arr, format="PNG")
